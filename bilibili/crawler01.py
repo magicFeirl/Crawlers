@@ -13,6 +13,7 @@ import time
 #基URL，请求参数：UID、起始动态ID（默认为0，即从最新的一条动态开始）
 base_url = 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history'
 
+#https://api.vc.bilibili.com/topic_svr/v1/topic_svr/topic_history?topic_name=%E4%B8%9C%E6%96%B9%E7%BE%8E%E5%9B%BE&offset_dynamic_id=0
 class Downloader:
 
 	def __init__(self,uid):
