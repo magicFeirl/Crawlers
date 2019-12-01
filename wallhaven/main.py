@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import time
+import sys
 
 #host https://wallhaven.cc/
 
@@ -17,7 +18,7 @@ header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/5
 #下载NSFW图片必须设置cookie参数 remember_web ...
 #sample:"remember_web123214":"fafwerewrewrEE"
 
-cookies = {"":""}
+cookies = {'remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d':'eyJpdiI6IjBPcW1qUnhPczJrUjA4bWhZdFlWT2c9PSIsInZhbHVlIjoibXZsN2NldHJMYjlqTnZqN3FUVTV4am9yQUgrbGNnXC9mSUNEVGRCXC9mTWl6cmE3SkRDNmR5bFRMclp0OVNZV2tCRUxsbFVjNGhEMkpsUVh6NkRlY0p5NVArT2RCdDFpalB4c1JpR0tpSGpicjNRVU1Ea0RBZzJqQzczR3VQR2hva3JyQ3g3cHpZYU5qTEJYSGVOVm40S1AwdFBaZ3F0bDhXa1laUldpZWdcL3ZjNzZyVTNkY0ozSThcLzA1aTY5QWVNayIsIm1hYyI6IjQxMWZiNGNjOWQ3NzIyYWZhNTJlMjk5YmEyZTJkZWNlOWEwZDk3OTM1ZTVhMTA4ZGI2NDAzMDc5ZDY3MzllMmUifQ%3D%3D'}
 		
 '''
 	sample url:
@@ -42,26 +43,28 @@ cookies = {"":""}
 
 class Downloader:
 
-	def __init__(self,target):
+	def __init__(self,target,path):
 		'''
 			target：要下载的图片目标TAG
+			path：图片URL保存路径
 		'''
 		self.target = target
+		self.path = path
 
 	#部分class=lazyload元素中的图片的后缀可能和原图不同，会出现404的状况
 	def format_url(self,obj):
 		'''
-			格式化从class=lazyload的元素中提取的URL，转为相应的原图URL。
+			格式化从class=thumb-info的元素中提取的URL，转为相应的原图URL。
 			
 		'''
-		#获取class=lazyload的元素的预览URL
-		#sample: https://th.wallhaven.cc/small/2k/2kv1y9.jpg
-		data = obj.get('data-src')
+		data = obj.find('a').get('data-href')
+		
 		index = data.rfind('/')+1
-		#切片出文件名用于格式化
-		#sample:2kv1y9.jpg
 		name = data[index:]
-		#原文件URL格式化参数之二
+		if obj.find('span',attrs={'class':'png'}) != None:
+			name = name+'.png'
+		else:
+			name = name+'.jpg'
 		src = name[0:2]
 		
 		#返回原图URL（被格式化的URL）
@@ -98,16 +101,25 @@ class Downloader:
 
 		bs = BeautifulSoup(res.text,'html.parser')
 
-		preview = bs.find_all('img',class_='lazyload')
-
-		for i in preview:
-			'''
-				coding here
-			'''
-			src = self.format_url(i)
-			print(src)
-			pass
+		#preview = bs.find_all('img',class_='lazyload')
+		#修改获取URL方式，原方式无法判别文件名会导致404
+		div_list = bs.find_all('div',attrs={'class':'thumb-info'})
+		if not len(div_list):
+			print('Cookie 已失效')
+			sys.exit()
+			
+		try:
+			file = open(self.path,'a')
+			for i in div_list:
+				'''
+					coding here
+				'''
+				src = self.format_url(i)
+				file.write(src+'\n')
+				pass
+		except:
+			print('异常')
 		pass
 
 
-Downloader('Touhou').run(purity='001')
+Downloader('Touhou','th_nsfw.txt').run(end=10,purity='001')
