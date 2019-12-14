@@ -35,8 +35,18 @@ filed = {'username':'un', #填写用户名
 cookies = r.cookies.get_dict()
 
 #登录成功
-r = requests.post(post_url,data=filed,cookies=cookies)
+r = requests.post(post_url,data=filed,headers=headers,cookies=cookies)
 ```
 
+## 注意事项：
 
+发送请求时要注意请求头，不同的请求头返回的数据格式不同，如果请求头不对会导致无法获取数据。
+
+> 默认请求头：content-type: application/x-www-form-urlencoded
+>
+> Chrome显示的Post参数格式为：Form Data
+
+requests会自动处理重定向；
+
+发送请求时，如果有params字段则requests会自动对参数进行编码，这可能会导致错误的结果（与网站URL编码格式不同）；
 
