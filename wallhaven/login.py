@@ -25,4 +25,5 @@ cookies = r.cookies.get_dict()
 #登录成功
 r = requests.post(post_url,data=filed,cookies=cookies)
 
-
+respones_cookies = r.cookies.get_dict()
+print(respones_cookies)

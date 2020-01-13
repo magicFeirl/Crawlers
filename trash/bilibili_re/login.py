@@ -11,7 +11,7 @@ modify_url = 'https://api.bilibili.com/x/relation/modify'
 #请求头，需自行格式化添加
 
 headers = {
-    "Cookie":"CURRENT_FNVAL=16; stardustvideo=1; LIVE_BUVID=AUTO2215551599227052; im_notify_type_183454954=0; fts=1555161510; _uuid=DA7930C7-9626-93CD-4FFB-CE31CB74EB4B27537infoc; sid=8oll4t4f; rpdid=|(u||uk|YluJ0J'ullY)|R~|m; im_local_unread_183454954=0; buvid3=52C85C8A-6AA0-42F7-89EB-F99935027FCB155808infoc; im_seqno_183454954=1095; _uuid=8D1EBB36-8B97-6515-B739-2C8B41BF38E777567infoc; UM_distinctid=16de85790b092-0b61b092e925af-b363e65-100200-16de85790b1247; laboratory=1-1; DedeUserID=183454954; DedeUserID__ckMd5=6b8fed359c76ac54; SESSDATA=55d54b52%2C1580454175%2Cb515ae11; bili_jct=3baed42d2da1bad7d7b3633763d89db6; CURRENT_QUALITY=64; INTVER=1; bp_t_offset_183454954=340617745828994672; stardustpgcv=0606",
+    "Cookie":"",
 
     "Accept":"application/json, text/javascript, */*; q=0.01",
     "Accept-Encoding":"gzip, deflate, br",
@@ -107,7 +107,7 @@ class PostLike():
             act: 1
             re_src: 14
             cross_domain: true
-            csrf: d1f4e7763235b8df59b6d54322771143
+            csrf:
         '''
         params['fid'] = fid
         params['act'] = 1
