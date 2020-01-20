@@ -29,54 +29,65 @@ async def get_json(pq, cq, session ,tags):
     '''获取json数据并将图片链接添加至cq队列中'''
 
     API = 'https://capi-v2.sankakucomplex.com/posts?page={}&limit=20&tags={}'
+    try:
+        while True:
+            page_num = await pq.get()
 
-    while True:
-        page_num = await pq.get()
-        url = API.format(page_num, tags)
+            try:
+                url = API.format(page_num, tags)
+                print(f'GET {url}')
 
-        print(f'GET {url}')
+                async with session.get(url) as resp:
+                    rjson = await resp.json()
 
-        async with session.get(url) as resp:
-            rjson = await resp.json()
+                    if len(rjson) == 0:
+                        while True:
+                            print(f'获取到空数据，取消第{page_num}页下载')
+                            pq.task_done()
+                            page_num = await pq.get()
 
-            if len(rjson) == 0:
-                while True:
-                    pq.task_done()
-                    await pq.get()
+                    for item in rjson:
+                        if item['file_type'].startswith('image'):
+                            img_url = item['sample_url']
+                            await cq.put(img_url)
+            except:
+                pass
+            finally:
+                pq.task_done()
 
-            for item in rjson:
-                if item['file_type'].startswith('image'):
-                    img_url = item['sample_url']
-                    await cq.put(img_url)
-
-            pq.task_done()
+    except asyncio.CancelledError:
+        pass
 
 async def download_img(cq, session):
     '''从队列中下载图片，若本地目录下已有同名文件则取消操作'''
+    try:
+        while True:
+            img_url = await cq.get()
 
-    while True:
-        img_url = await cq.get()
+            try:
+                lidx = img_url.rfind('/') + 1
+                ridx = img_url.rfind('?')
 
-        lidx = img_url.rfind('/') + 1
-        ridx = img_url.rfind('?')
+                file_name = img_url[lidx:ridx]
+                print(f'Downloading: {file_name}')
 
-        file_name = img_url[lidx:ridx]
+                if not os.path.exists(file_name):
+                    async with aiofiles.open(file_name, 'wb') as f:
+                        async with session.get(img_url) as resp:
+                            while True:
+                                chunk = await resp.content.read(CHUNK_SIZE)
 
+                                if not chunk:
+                                    break
 
-        if not os.path.exists(file_name):
-            async with aiofiles.open(file_name, 'wb') as f:
-                async with session.get(img_url) as resp:
-                    while True:
-                        chunk = await resp.content.read(CHUNK_SIZE)
+                                await f.write(chunk)
+            except:
+                pass
+            finally:
+                cq.task_done()
 
-                        if not chunk:
-                            break
-
-                        await f.write(chunk)
-
-        print(file_name,'Done')
-        cq.task_done()
-
+    except asyncio.CancelledError:
+        pass
 
 async def main(tags, folder="", start_page=1, end_page=2,\
                 max_conn=10, max_download=60):
@@ -97,7 +108,7 @@ async def main(tags, folder="", start_page=1, end_page=2,\
     '''
 
     pq = asyncio.Queue()
-    cq = asyncio.Queue()
+    cq = asyncio.Queue(maxsize=80)
 
     tasks = []
 
@@ -110,21 +121,24 @@ async def main(tags, folder="", start_page=1, end_page=2,\
     max_download = total_page * 20 \
     if max_download > total_page *20 else max_download
 
-    print(f'将启动 {max_conn} 条协程请求数据, {max_download}条协程下载文件')
+    print(f'将启动 {max_conn} 条协程请求数据, {max_download} 条协程下载文件')
 
     for _ in range(start_page, end_page+1):
         put_pq_data(pq, _)
 
-    timeout = aiohttp.ClientTimeout(total=60)
+    timeout = aiohttp.ClientTimeout(total=45)
+    tasks1 = []
+    tasks2 = []
+
     async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
         for _ in range(max_conn):
             task = asyncio.create_task(get_json(pq, cq, session, tags))
-            tasks.append(task)
+            tasks1.append(task)
             await asyncio.sleep(.001)
 
         for _ in range(max_download):
             task = asyncio.create_task(download_img(cq, session))
-            tasks.append(task)
+            tasks2.append(task)
 
         print('初始化完毕')
         await pq.join()
@@ -132,15 +146,17 @@ async def main(tags, folder="", start_page=1, end_page=2,\
         await cq.join()
         print('下载完毕')
 
-    for task in tasks:
-        task.cancel()
+        for task in tasks1:
+            task.cancel()
 
+        for task in tasks2:
+            task.cancel()
 
 if __name__ == '__main__':
-    tags = 'ke-ta+order%3Aquality+rating%3Ae'
+    tags = 'kirisame_marisa'
 
     s = 1
-    e = 3
+    e = 5
 
     start = time.time()
 
