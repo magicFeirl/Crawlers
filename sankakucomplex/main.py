@@ -29,65 +29,66 @@ async def get_json(pq, cq, session ,tags):
     '''获取json数据并将图片链接添加至cq队列中'''
 
     API = 'https://capi-v2.sankakucomplex.com/posts?page={}&limit=20&tags={}'
-    try:
-        while True:
-            page_num = await pq.get()
+    while True:
+        page_num = await pq.get()
 
-            try:
-                url = API.format(page_num, tags)
-                print(f'GET {url}')
+        try:
+            url = API.format(page_num, tags)
+            print(f'GET {url}')
 
-                async with session.get(url) as resp:
-                    rjson = await resp.json()
+            async with session.get(url) as resp:
+                rjson = await resp.json()
+                dlen = len(rjson)
 
-                    if len(rjson) == 0:
-                        while True:
-                            print(f'获取到空数据，取消第{page_num}页下载')
-                            pq.task_done()
-                            page_num = await pq.get()
+                if dlen == 0:
+                    while True:
+                        print(f'获取到空数据，取消第{page_num}页下载')
+                        pq.task_done()
+                        page_num = await pq.get()
 
-                    for item in rjson:
-                        if item['file_type'].startswith('image'):
-                            img_url = item['sample_url']
-                            await cq.put(img_url)
-            except:
-                pass
-            finally:
+                for item in rjson:
+                    if item['file_type'].startswith('image'):
+                        img_url = item['sample_url']
+                        await cq.put(img_url)
+
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            print('Get Json Error:', e)
+        finally:
+            if not dlen == 0:
                 pq.task_done()
-
-    except asyncio.CancelledError:
-        pass
 
 async def download_img(cq, session):
     '''从队列中下载图片，若本地目录下已有同名文件则取消操作'''
-    try:
-        while True:
-            img_url = await cq.get()
 
-            try:
-                lidx = img_url.rfind('/') + 1
-                ridx = img_url.rfind('?')
+    while True:
+        img_url = await cq.get()
 
-                file_name = img_url[lidx:ridx]
-                print(f'Downloading: {file_name}')
+        try:
+            lidx = img_url.rfind('/') + 1
+            ridx = img_url.rfind('?')
 
-                if not os.path.exists(file_name):
-                    async with aiofiles.open(file_name, 'wb') as f:
-                        async with session.get(img_url) as resp:
-                            while True:
-                                chunk = await resp.content.read(CHUNK_SIZE)
+            file_name = img_url[lidx:ridx]
+            print(f'Downloading: {file_name}')
 
-                                if not chunk:
-                                    break
+            if not os.path.exists(file_name):
+                async with aiofiles.open(file_name, 'wb') as f:
+                    async with session.get(img_url) as resp:
+                        while True:
+                            chunk = await resp.content.read(CHUNK_SIZE)
 
-                                await f.write(chunk)
-            except:
-                pass
-            finally:
-                cq.task_done()
+                            if not chunk:
+                                break
 
-    except asyncio.CancelledError:
-        pass
+                            await f.write(chunk)
+
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            print('Download Img Error:', e)
+        finally:
+            cq.task_done()
 
 async def main(tags, folder="", start_page=1, end_page=2,\
                 max_conn=10, max_download=60):
@@ -153,7 +154,7 @@ async def main(tags, folder="", start_page=1, end_page=2,\
             task.cancel()
 
 if __name__ == '__main__':
-    tags = 'kirisame_marisa'
+    tags = 'cookie(touhou)'
 
     s = 1
     e = 5
