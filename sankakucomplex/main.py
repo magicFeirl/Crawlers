@@ -1,9 +1,11 @@
 import asyncio
 
-from download import Downloader
+from downloader import Downloader
 
 async def main():
-    d = Downloader('tag_name', 'tag_name', 1, 1)
+    d = Downloader('touhou', \
+    'touhou1', 3, 5, timeout=3*60)
+
     await d.start()
 
 if __name__ == '__main__':

@@ -23,6 +23,50 @@
 
 将实现封装为类，其中关键代码可以复用，准备添加回调
 
+### 2020年1月25日更新
+
+优化了代码格式，同时去除了部分错误代码。
+
+关于`Task`对象的`cancel()`方法，在调用后还要执行await 语句以等待协程取消完毕。可以在协程内捕获`asyncio.CancelledError`异常并将其raise下去，不推荐直接抑制异常。在执行`await task.cancel()`后异常会被传递到当前代码块，要使用try...except asyncio.CancelledError捕获异常，或者直接使用`asyncio.gather(task, return_exceptions=True)`等待协程取消完毕，示例代码:
+
+```python
+'''取消协程运行的几种方法'''
+
+import asyncio
+
+async def run():
+    
+    try:
+    	print('Running')
+    	await asyncio.sleep(10)
+    except asyncio.CancelledError:
+        print('Cancelled')
+        raise # 将异常传递下去 
+    print('Done')
+    
+async def main():
+    
+    task = asyncio.create_task(run())
+    
+    await asyncio.sleep(0) # 等待协程运行
+    
+    task.cancel()
+    
+    # 第一种方法
+    
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+    
+    # 第二种方法
+    asyncio.gather(task, return_exceptions=True)
+    
+    
+```
+
+
+
 ### 心得
 
 aio算是新技术，虽然也出来很久了，但是目前看到的电子书上都没有相关的介绍，官方文档如果能耐得下心去看的话其实还是有很大帮助的，不要以为浮躁而错失了一项新技术。性能上aio比多线程要好，用法上个人感觉也比多线程容易，不过想要发挥aio的全部威力还是得借助`asyncio.Queue()`的生产者消费者模型。此外分析页面也是爬虫必不可少的一步，解析静态网页很容易，如果是动态加载的页面就可能会涉及到ajax、js等技术，还是得活到老学到老。
