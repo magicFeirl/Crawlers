@@ -3,7 +3,7 @@ import asyncio
 from downloader import Downloader
 
 async def main():
-    d = Downloader('touhou', 't1', 1, 2)
+    d = Downloader('touhou', 't11', 1, 2)
 
     await d.start()
 
