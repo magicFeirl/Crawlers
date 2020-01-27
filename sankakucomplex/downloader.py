@@ -17,6 +17,7 @@ import os
 import aiohttp
 import aiofiles
 
+
 def make_dirs(dir_name):
     '''若文件夹不存在则创建文件夹，然后将当前目录地址设置为指定文件夹的地址'''
 
@@ -55,9 +56,9 @@ class Downloader():
 
     FILE_QUALITY = ['sample_url', 'file_url']
 
-    def __init__(self, tags, dir_name, start_page, end_page, \
-    max_size=120, max_conn_num=10, max_download_num=120, \
-    timeout=3*60, download_videos=False, file_quality=0):
+    def __init__(self, tags, dir_name, start_page, end_page,
+                 max_size=120, max_conn_num=10, max_download_num=120,
+                 timeout=3*60, download_videos=False, file_quality=0):
 
         pnum = end_page - start_page + 1
 
@@ -66,10 +67,10 @@ class Downloader():
         self.start_page = start_page
         self.end_page = end_page+1
         self.max_conn_num = max_conn_num if pnum > \
-        max_conn_num else pnum
+            max_conn_num else pnum
 
         self.max_download_num = max_download_num if pnum * 20 > \
-        max_download_num else pnum * 20
+            max_download_num else pnum * 20
 
         self.timeout = timeout
         self.counter = 0
@@ -83,13 +84,11 @@ class Downloader():
 
         self.init_queue()
 
-
     def init_queue(self):
         '''初始化连接队列'''
 
         for pidx in range(self.start_page, self.end_page):
             self.conn_queue.put_nowait(pidx)
-
 
     def __help(self):
         '''提示函数'''
@@ -99,14 +98,13 @@ class Downloader():
         print(f'图片将保存至当前目录下的 {self.dir_name} 文件夹中；\n')
         print('提示：已经存在的重名图片不会重复下载。\n\n')
 
-        input('按任意键开始下载...')
-
+        input('按回车键开始下载...')
 
     async def conn(self, session):
         '''取出队列数据并连接相应接口，如果获取到空数据会清空后面的队列数据'''
 
-        API = 'https://capi-v2.sankakucomplex.com/posts'+ \
-        '?page={}&limit=20&tags={}'
+        API = 'https://capi-v2.sankakucomplex.com/posts' + \
+            '?page={}&limit=20&tags={}'
 
         while True:
             pidx = await self.conn_queue.get()
@@ -117,7 +115,7 @@ class Downloader():
                 print(f'获取第 {pidx} 页数据...')
                 async with session.get(url) as resp:
                     if resp.status is not 200:
-                       raise Exception(f'Http状态码错误:{resp.status}')
+                        raise Exception(f'Http状态码错误:{resp.status}')
 
                     img_infos = await resp.json()
                     print(f'成功获取第 {pidx} 页数据:')
@@ -134,7 +132,7 @@ class Downloader():
                                 .put(img_url[self.file_quality])
                         elif img_url['file_type'].startswith('image'):
                             await self.url_queue\
-                            .put(img_url[self.file_quality])
+                                .put(img_url[self.file_quality])
 
             except asyncio.TimeoutError:
                 print(f'Error:第 {pidx} 页数据请求超时')
@@ -144,7 +142,6 @@ class Downloader():
             finally:
                 if len(img_infos) is not 0:
                     self.conn_queue.task_done()
-
 
     async def download_img(self, session):
         '''从队列中下载图片，若本地目录下已有同名文件则取消操作'''
@@ -179,14 +176,13 @@ class Downloader():
             finally:
                 self.url_queue.task_done()
 
-
     async def start(self):
         '''启动下载器'''
 
         tasks = []
         headers = {
-            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64)"+\
-            " AppleWebKit/537.36 (KHTML, like Gecko)"+\
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" +
+            " AppleWebKit/537.36 (KHTML, like Gecko)" +
             " Chrome/79.0.3945.130 Safari/537.36"
         }
 
@@ -194,14 +190,14 @@ class Downloader():
         make_dirs(self.dir_name)
 
         timeout = aiohttp.ClientTimeout(self.timeout)
-        async with aiohttp.ClientSession(headers=headers, \
-            timeout=timeout) as session:
+        async with aiohttp.ClientSession(headers=headers,
+                                         timeout=timeout) as session:
 
-            tasks.extend([asyncio.create_task(self.conn(session))\
-            for _ in range(self.max_conn_num)])
+            tasks.extend([asyncio.create_task(self.conn(session))
+                          for _ in range(self.max_conn_num)])
 
-            tasks.extend([asyncio.create_task(self.download_img(session))\
-            for _ in range(self.max_download_num)])
+            tasks.extend([asyncio.create_task(self.download_img(session))
+                          for _ in range(self.max_download_num)])
 
             start_time = time.time()
 
@@ -214,8 +210,10 @@ class Downloader():
             # 结束所有协程
             await asyncio.gather(*tasks, return_exceptions=True)
 
-            print('*' * 50)
+            print('*' * 60)
             print(f'Done {time.time() - start_time} s')
             print(f'共有 {self.total_imgs} 图片')
             print(f'成功下载 {self.counter} 张图片')
-            print(f'失败 {self.total_imgs - self.counter} 张')
+            print(f'失败 {self.total_imgs - self.counter} 张\n')
+
+        input('按回车键退出...')
