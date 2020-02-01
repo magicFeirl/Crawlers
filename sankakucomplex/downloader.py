@@ -3,7 +3,7 @@ chan.sankakucomplex Images Downloader
 
 API: https://capi-v2.sankakucomplex.com/posts?page={}&limit=20&tags={}
 
-requier:
+require:
 
 Python 3.7+
 aiohttp
@@ -137,8 +137,12 @@ class Downloader():
             except asyncio.TimeoutError:
                 print(f'Error:第 {pidx} 页数据请求超时')
                 self.conn_queue.task_done()
+            except asyncio.CancelledError:
+                raise
             except Exception as exce:
-                print('Conn queue error:', exce)
+                print('Line 143 conn() Error:', exce)
+                if len(img_infos) is 0:
+                    self.conn_queue.task_done()
             finally:
                 if len(img_infos) is not 0:
                     self.conn_queue.task_done()
