@@ -18,7 +18,6 @@
 
 * `consume_callback`将`callback`获取到的URL加入下载队列，该函数用来处理下载URL，签名`consume_callback(url, session)`其中的session对象是传入构造方法的`session`对象
 
-  
 
 ###### 方法
 
@@ -83,3 +82,11 @@ if __name__ == '__main__':
 
 ```
 
+#### 更新
+
+##### 2020年2月27日
+
+* 添加注释
+* 新增获取到空列表清空请求队列功能
+* 新增显示耗时功能
+* 更新了示例文件
