@@ -9,16 +9,9 @@ import aio_crawler
 
 
 async def parse_json(text):
-    pictures = []
-
     items = json.loads(text)['data']['items']
 
-    for item in items:
-        if 'pictures' in item:
-            for pic in item['pictures']:
-                pictures.append(pic)
-
-    return pictures
+    return [pic['img_src'] for item in items if 'pictures' in item for pic in item['pictures']]
 
 
 async def prt_url(url, session):
@@ -33,13 +26,12 @@ def format_url(uid, begin, end):
 
 
 async def main():
-    url_list = format_url('0', 1, 100)
+    url_list = format_url('2', 1, 1)
 
     async with aiohttp.ClientSession() as session:
-        crawler = aio_crawler.AsyncCrawler(session, url_list,\
-         1, parse_json, 1, prt_url)
+        crawler = aio_crawler.AsyncCrawler(session, url_list, parse_json, prt_url)
 
-        await crawler.run()
+        await crawler.run(1, 1)
 
 
 if __name__ == '__main__':
