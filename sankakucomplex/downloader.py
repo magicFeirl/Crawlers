@@ -194,8 +194,7 @@ class Downloader():
         make_dirs(self.dir_name)
 
         timeout = aiohttp.ClientTimeout(self.timeout)
-        async with aiohttp.ClientSession(headers=headers,
-                                         timeout=timeout) as session:
+        async with aiohttp.ClientSession(headers=headers,timeout=timeout,connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
             tasks.extend([asyncio.create_task(self.conn(session))
                           for _ in range(self.max_conn_num)])
@@ -206,6 +205,7 @@ class Downloader():
             start_time = time.time()
 
             await self.conn_queue.join()
+            print('所有连接已完毕')
             await self.url_queue.join()
 
             for task in tasks:
