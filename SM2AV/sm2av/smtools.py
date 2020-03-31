@@ -1,5 +1,7 @@
+"""获取sm号工具模块"""
+
 import re
- 
+
 import requests
 import aiohttp
 from lxml import etree
@@ -13,7 +15,11 @@ HEADERS = {
 
 
 async def get_session(headers=None, timeout=60):
-    """获取一个默认的session"""
+    """获取一个默认的session
+
+    headers: 请求头
+    timeout: 请求超时
+    """
 
     if not headers:
         headers = HEADERS
@@ -30,10 +36,32 @@ def perr(message, err=None):
         print(f'Error type: {type(err)}')
 
 
+async def bv2av(session, bvid):
+    """简单的BV转AV程序"""
+
+    api = f'https://api.bilibili.com/x/web-interface/archive/stat?bvid={bvid}'
+    aid = ''
+
+    try:
+        async with session.get(api) as resp:
+            r = await resp.json()
+            if r['code'] == 0:
+                aid = r['data']['aid']
+            else:
+                perr(f'无效的BV号: {bvid}')
+    except Exception as error:
+        perr(f'BV号转AV号出错: {error}', error)
+
+    return aid
+
 async def get_sm_from_desc(session, aid):
-    """从B站视频简介中获取sm号列表"""
-    if str(aid).startswith('av'):
-        aid = str(aid)[2:]
+    """从B站视频简介中获取sm号列表
+
+    session: 一个ClientSession对象
+    aid: 视频av号"""
+
+    if str(aid).upper().startswith('BV'):
+        aid = await bv2av(session, aid)
 
     print(f'从 av{aid} 获取sm号列表...')
 
@@ -53,17 +81,24 @@ async def get_sm_from_desc(session, aid):
     except Exception as error:
         perr(f'请求数据异常: {error}', error)
 
-    return re.findall(r'sm\d+', text)
+    li = re.findall(r'sm\d+', text)
+    print(f'共获取到 {len(li)} 条数据')
+
+    return li
 
 
-async def get_sm_from_nico(session, uid):
+async def get_sm_from_nico(uid, begin=1, end=1):
     """从n站用户投稿获取sm号列表，使用前请确保能够连上n站
-    这里使用aiohttp会抛出异常，至于原因暂且不清楚，可以使用requests"""
+    这里使用aiohttp会抛出异常，原因可能是aiohttp和httpx貌似默认不会走全局代理?
+    可以使用requests代替
+
+    uid: N站用户ID
+    begin: 投稿列表起始页
+    end: 投稿列表终止页"""
 
     print(f'从N站用户 {uid} 投稿列表获取sm号...')
 
     li = []
-    url = f'https://www.nicovideo.jp/user/{uid}/video'
 
     def sub(sm):
         if sm.startswith('watch/'):
@@ -75,17 +110,24 @@ async def get_sm_from_nico(session, uid):
         return list(map(sub, selector.xpath(xpath)))
 
     try:
-        with requests.get(url) as resp:
-            li = get_sm_list(resp.text)
+        for idx in range(begin, end+1):
+            url = f'https://www.nicovideo.jp/user/{uid}/video?page={idx}'
+            with requests.get(url) as resp:
+                li += get_sm_list(resp.text)
     except Exception as error:
         perr(f'请求网页异常: {error}', error)
 
+    print(f'共获取到 {len(li)} 条数据')
     return li
 
 
 async def get_sm_from_file(filename, encoding='utf-8'):
-    """从本地文件获取sm号列表"""
+    """从本地文件获取sm号列表
 
+    filename: 文件名
+    encoding: 编码"""
+
+    print(f'从文件 {filename} 读取sm号...')
     text = ''
 
     try:
@@ -94,16 +136,22 @@ async def get_sm_from_file(filename, encoding='utf-8'):
     except Exception as error:
         perr(f'打开文件 {filename} 失败: {error}', error)
 
-    return re.findall(r'sm\d+', text)
+    li = re.findall(r'sm\d+', text)
+    print(f'共获取到 {len(li)} 条数据')
+
+    return li
 
 
 async def get_sm_from_text(text):
     """从字符串获取sm号列表，多个sm号用半角逗号(,)隔开"""
+
     li = []
 
     try:
         li = list(map(lambda s: s.strip(), text.split(',')))
     except Exception as error:
         perr(f'分离SM号失败: {error}', error)
+
+    print(f'共获取到 {len(li)} 条数据')
 
     return li
