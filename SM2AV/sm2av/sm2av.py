@@ -185,9 +185,8 @@ class SM2AV:
 
         if len(self.doge_result_list):
             print('Doge 检索结果:')
-            for info in self.result_list:
-                for item in info:
-                    print(item[0], item[1], item[2])
+            for info in self.doge_result_list:
+                print(info[0], info[1])
         else:
             print('Doge 检索无结果。')
 

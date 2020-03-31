@@ -92,6 +92,9 @@ async def get_sm_from_nico(uid, begin=1, end=1):
     这里使用aiohttp会抛出异常，原因可能是aiohttp和httpx貌似默认不会走全局代理?
     可以使用requests代替
 
+    这里有个缺陷：
+    必须等到sm号全部解析完后才能启动检索，在多页且网速较慢的情况下无法体现协程的优势
+
     uid: N站用户ID
     begin: 投稿列表起始页
     end: 投稿列表终止页"""
