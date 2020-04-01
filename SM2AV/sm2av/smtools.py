@@ -116,7 +116,12 @@ async def get_sm_from_nico(uid, begin=1, end=1):
         for idx in range(begin, end+1):
             url = f'https://www.nicovideo.jp/user/{uid}/video?page={idx}'
             with requests.get(url) as resp:
-                li += get_sm_list(resp.text)
+                temp = get_sm_list(resp.text)
+
+                if len(temp) == 0:
+                    break
+
+                li += temp
     except Exception as error:
         perr(f'请求网页异常: {error}', error)
 

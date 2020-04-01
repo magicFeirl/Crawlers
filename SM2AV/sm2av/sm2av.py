@@ -80,7 +80,7 @@ class SM2AV:
 
     async def search_from_bili(self, coro_num=1):
         """站内检索
-        调用接口限制较小，但是请求多了照样会触发反爬，但是为了效率这里不做处理"""
+        调用接口限制较小，但是请求多了照样会触发反爬，这里加个.5s的延时，看有没有效果"""
 
         print('正在进行站内检索...')
         self.__put_in_queue(self.sm_list)
@@ -89,7 +89,7 @@ class SM2AV:
             api = 'https://api.bilibili.com/x/web-interface/search/type' + \
                   f'?keyword={smn}&search_type=video'
 
-            # await asyncio.sleep(.5)
+            await asyncio.sleep(.5)
             async with self.session.get(api) as resp:
                 result = await resp.json()
 

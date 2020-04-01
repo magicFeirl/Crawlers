@@ -26,6 +26,7 @@ def get_input():
     except Exception as error:
         print(f'输入异常: {error}')
 
+
 async def get_from_desc(session):
     """封装的从B站简介获取sm号方法"""
 
@@ -40,21 +41,26 @@ async def get_from_desc(session):
 
 
 async def get_from_nico(session):
-    """封装的从N站用户ID获取sm号方法"""
+    """封装的从N站用户ID获取sm号方法
 
-    inplist = input('输入N站用户ID [起始页] [终止页]: ').split(' ')
-    begin = end = 1
-    uid = inplist[0]
+    起始页和终止页是可选项，默认只会获取一页数据，程序不对页数的正确性进行检查"""
 
-    if len(inplist) == 2:
-        begin = end = int(inplist[1])
-    elif len(inplist) == 3:
-        begin = int(inplist[1])
-        end = int(inplist[2])
-    else:
-        print(len(inplist))
-        print('无效的输入。')
-        return get_input()
+    while True:
+        inplist = input('输入N站用户ID [起始页] [终止页]: ').split(' ')
+        begin = end = 1
+
+        if 1 <= len(inplist) <= 3:
+            uid = inplist[0]
+
+            if len(inplist) == 2:
+                begin = end = int(inplist[1])
+            elif len(inplist) == 3:
+                begin = int(inplist[1])
+                end = int(inplist[2])
+
+            break
+        elif len(inplist) > 3:
+            print('无效的输入。')
 
     sm_list = await smtools.get_sm_from_nico(uid, begin, end)
 
@@ -97,4 +103,4 @@ async def run():
         while True:
             sm_list = await switch[get_input()](session)
             await sm2av.SM2AV(sm_list, session).\
-                search(coro_num=3)
+                search(coro_num=5)
