@@ -176,10 +176,12 @@ class SM2AV:
         start = time()
 
         print('\n\n请稍等...外站检索可能会花费更长时间...')
+
         await self.search_from_bili(coro_num)
         await self.search_from_doge(delay)
         self.__get_result()
-        print(f'\n检索完毕。耗时: {round(time() - start)} s\n')
+
+        print(f'\n检索完毕。\n耗时: {round(time() - start, 2)} s\n')
 
     def __get_result(self):
 
@@ -196,6 +198,6 @@ class SM2AV:
         print(f'{len(not_found)} 个数据未找到。')
 
         if len(not_found):
-            print(f'以下为未找到sm号集合：')
+            print(f'以下为未找到sm号：')
             for item in not_found:
-                print(item, sep=' ')
+                print(item, end=' ')
