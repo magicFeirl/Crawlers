@@ -1,3 +1,5 @@
 .idea
+*.txt
+*.exe
+__pycache__
 sm2av/__pycache__
- 
