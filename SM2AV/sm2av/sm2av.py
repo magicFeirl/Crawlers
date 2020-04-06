@@ -128,7 +128,9 @@ class SM2AV:
 
     async def search_from_doge(self, delay=2):
         """外站检索
-        请求过于频繁会导致503，所以就做成同步的了"""
+        请求过于频繁会导致503，所以就做成同步的了
+
+"""
 
         search_reg = re.compile(r'av\d+')
         sm_list = list(self.all-self.found_sm)
@@ -137,38 +139,50 @@ class SM2AV:
         print('正在使用DogeDoge进行检索...')
 
         async def inner(sm):
-            url = f'https://www.dogedoge.com/results?q={sm}+site%3Awww.bilibili.com&lang=cn'
+            # +site%3Awww.bilibili.com& 关于网站精确检索貌似会影响结果的准确性，所以去掉了
+            # 这里只保留检索中文结果
+            url = f'https://www.dogedoge.com/results?q={sm}&lang=cn'
 
             try:
                 async with self.session.get(url) as resp:
                     html = await resp.text()
+
                     xpath = '//a[@class="result__url js-result-extras-url"]/@href'
                     selector = etree.HTML(html)
                     href_list = selector.xpath(xpath)
 
-                    # if not len(href_list):
-                    #    print(f'DogeDoge 检索: {sm} 无返回列表，可能是因为访问过于频繁或检索无结果。')
+                    if not len(href_list):
+                        # print(f'DogeDoge 检索: {sm} 无返回列表，可能是因为访问过于频繁或检索无结果。')
+                        # 如果503，把链接再次入队
+                        if selector.xpath('//body/center/h1/text()'):
+                            self.url_queue.put_nowait(url)
 
                     for href in href_list:
                         url = 'https://www.dogedoge.com/' + href
                         async with self.session.get(url, allow_redirects=False) as re_resp:
                             res = re_resp.headers.get('location')
+
+                            # print(res)
                             # 排除带参数的URL
                             if res.find('?') == -1:
-                                self.found_sm.add(sm)
                                 res = re.search(search_reg, res)
+                                # res[0] av号
                                 if res and res[0] not in self.doge_found:
                                     self.doge_result_list.append((sm, res[0]))
                                     self.doge_found.add(res[0])
+
+                                    self.found_sm.add(sm)
+
             except Exception as error:
                 print(f'外站检索出错: {error}, type: {type(error)}')
 
             if len(sm_list) > 1:
-                await asyncio.sleep(randint(1, delay))
+                # 这里将delay增长到2s，貌似不会503了
+                await asyncio.sleep(randint(2, delay))
 
         await self.__create_tasks(1, inner)
 
-    async def search(self, coro_num=1, delay=2):
+    async def search(self, coro_num=1, delay=3):
         """启动搜索
         coro_num: 站内检索并发数
         delay: 站外检索最大延时"""

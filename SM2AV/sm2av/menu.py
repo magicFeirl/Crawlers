@@ -2,6 +2,7 @@ from . import smtools
 from . import sm2av
 
 
+# 考虑新增一个输出结果到本地文本文件的功能
 def get_input():
     """获取用户输入"""
 
