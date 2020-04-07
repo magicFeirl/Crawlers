@@ -11,9 +11,12 @@ from lxml import etree
 
 class SM2AV:
 
-    def __init__(self, sm_list, session):
+    def __init__(self, sm_list, session, output_file):
         self.session = session
         self.url_queue = asyncio.Queue()
+
+        # 输出文件句柄
+        self.output_file = output_file
 
         # 内站检索结果列表
         self.result_list = []
@@ -121,6 +124,8 @@ class SM2AV:
             for info in self.result_list:
                 for item in info:
                     print(item[0], item[1], item[2])
+                    # 输出到本地
+                    print(item[0], item[1], item[2], file=self.output_file)
         else:
             print('站内检索无结果。')
 
@@ -128,9 +133,7 @@ class SM2AV:
 
     async def search_from_doge(self, delay=2):
         """外站检索
-        请求过于频繁会导致503，所以就做成同步的了
-
-"""
+        请求过于频繁会导致503，所以就做成同步的了"""
 
         search_reg = re.compile(r'av\d+')
         sm_list = list(self.all-self.found_sm)
@@ -177,7 +180,7 @@ class SM2AV:
                 print(f'外站检索出错: {error}, type: {type(error)}')
 
             if len(sm_list) > 1:
-                # 这里将delay增长到2s，貌似不会503了
+                # 这里将delay增长到2s，减少被503的可能
                 await asyncio.sleep(randint(2, delay))
 
         await self.__create_tasks(1, inner)
@@ -203,6 +206,8 @@ class SM2AV:
             print('Doge 检索结果:')
             for info in self.doge_result_list:
                 print(info[0], info[1])
+                # 输出到本地
+                print(info[0], info[1], file=self.output_file)
         else:
             print('Doge 检索无结果。')
 
@@ -213,5 +218,7 @@ class SM2AV:
 
         if len(not_found):
             print(f'以下为未找到sm号：')
+            print(f'{len(not_found)} 个数据未找到。以下为未找到sm号：', file=self.output_file)
             for item in not_found:
                 print(item, end=' ')
+                print(item, file=self.output_file)

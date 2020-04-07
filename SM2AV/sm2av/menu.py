@@ -103,6 +103,16 @@ async def run():
 
     async with await smtools.get_session() as session:
         while True:
-            sm_list = await switch[get_input()](session)
-            await sm2av.SM2AV(sm_list, session).\
-                search(coro_num=5)
+            filename = input('输入输出文件名: ')
+
+            try:
+                with open(filename, 'a') as file:
+                    file_obj = file
+                    sm_list = await switch[get_input()](session)
+                    await sm2av.SM2AV(sm_list, session, file_obj).search(coro_num=5)
+
+                print(f'结果已输出到: {filename}')
+                print('=' * 40)
+            except IOError as error:
+                print(f'打开文件失败: {error}')
+
