@@ -11,7 +11,7 @@ from lxml import etree
 
 class SM2AV:
 
-    def __init__(self, sm_list, session, output_file):
+    def __init__(self, sm_list, session, output_file=None):
         self.session = session
         self.url_queue = asyncio.Queue()
 
@@ -125,7 +125,8 @@ class SM2AV:
                 for item in info:
                     print(item[0], item[1], item[2])
                     # 输出到本地
-                    print(item[0], item[1], item[2], file=self.output_file)
+                    if self.output_file:
+                        print(item[0], item[1], item[2], file=self.output_file)
         else:
             print('站内检索无结果。')
 
@@ -207,18 +208,22 @@ class SM2AV:
             for info in self.doge_result_list:
                 print(info[0], info[1])
                 # 输出到本地
-                print(info[0], info[1], file=self.output_file)
+                if self.output_file:
+                    print(info[0], info[1], file=self.output_file)
         else:
             print('Doge 检索无结果。')
 
         print(f'\n共 {len(self.all)} 个数据，检索到 {len(self.doge_found)+len(self.found_av)} 个相关视频。')
 
         not_found = list(self.all-self.found_sm)
-        print(f'{len(not_found)} 个数据未找到。')
+        print(f'\n{len(not_found)} 个数据未找到。')
 
         if len(not_found):
             print(f'以下为未找到sm号：')
-            print(f'{len(not_found)} 个数据未找到。以下为未找到sm号：', file=self.output_file)
+            if self.output_file:
+                print(f'{len(not_found)} 个数据未找到。以下为未找到sm号：', file=self.output_file)
+
             for item in not_found:
                 print(item, end=' ')
-                print(item, file=self.output_file)
+                if self.output_file:
+                    print(item, file=self.output_file)
