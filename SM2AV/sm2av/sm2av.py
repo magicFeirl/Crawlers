@@ -36,6 +36,7 @@ class SM2AV:
 
     async def __search(self, callback, *args, **kwargs):
         """异步URL队列"""
+        counter = 0
 
         while True:
             try:
@@ -88,7 +89,7 @@ class SM2AV:
         print('正在进行站内检索...')
         self.__put_in_queue(self.sm_list)
 
-        async def inner(smn):
+        async def task(smn):
             api = 'https://api.bilibili.com/x/web-interface/search/type' + \
                   f'?keyword={smn}&search_type=video'
 
@@ -103,7 +104,7 @@ class SM2AV:
                     data = result['data']['result']
                     li = []
 
-                    if len(data):
+                    if data:
                         self.found_sm.add(smn)
 
                     for r in data:
@@ -114,10 +115,10 @@ class SM2AV:
                             title = r['title']
                             li.append((smn, aid, title))
 
-                    if len(li):
+                    if li:
                         self.result_list.append(li)
 
-        await self.__create_tasks(coro_num, inner)
+        await self.__create_tasks(coro_num, task)
 
         if len(self.result_list):
             print('站内检索结果:')
@@ -142,7 +143,7 @@ class SM2AV:
 
         print('正在使用DogeDoge进行检索...')
 
-        async def inner(sm):
+        async def task(sm):
             # +site%3Awww.bilibili.com& 关于网站精确检索貌似会影响结果的准确性，所以去掉了
             # 这里只保留检索中文结果
             url = f'https://www.dogedoge.com/results?q={sm}&lang=cn'
@@ -151,32 +152,36 @@ class SM2AV:
                 async with self.session.get(url) as resp:
                     html = await resp.text()
 
-                    xpath = '//a[@class="result__url js-result-extras-url"]/@href'
                     selector = etree.HTML(html)
-                    href_list = selector.xpath(xpath)
+                    # 获取所有包含搜索结果的a标签
+                    tag_a = selector.xpath('//a[@class="result__url js-result-extras-url"]')
 
-                    if not len(href_list):
+                    if not tag_a:
                         # print(f'DogeDoge 检索: {sm} 无返回列表，可能是因为访问过于频繁或检索无结果。')
                         # 如果503，把链接再次入队
                         if selector.xpath('//body/center/h1/text()'):
                             self.url_queue.put_nowait(url)
 
-                    for href in href_list:
-                        url = 'https://www.dogedoge.com/' + href
-                        async with self.session.get(url, allow_redirects=False) as re_resp:
-                            res = re_resp.headers.get('location')
+                    # 遍历结果标签
+                    for a in tag_a:
+                        # 先解析结果简介信息，排除非B站的链接，避免无用请求
+                        res_domain = a.xpath('string(./span[@class="result__url__domain"])')
 
-                            # print(res)
-                            # 排除带参数的URL
-                            if res.find('?') == -1:
-                                res = re.search(search_reg, res)
-                                # res[0] av号
-                                if res and res[0] not in self.doge_found:
-                                    self.doge_result_list.append((sm, res[0]))
-                                    self.doge_found.add(res[0])
+                        if res_domain and res_domain.find(r'video/av') != -1:
+                            url = 'https://www.dogedoge.com/' + a.get('href')
 
-                                    self.found_sm.add(sm)
+                            async with self.session.get(url, allow_redirects=False) as re_resp:
+                                res = re_resp.headers.get('location')
 
+                                # 排除带参数的URL
+                                if res.find('?') == -1:
+                                    res = re.search(search_reg, res)
+                                    # res[0] av号
+                                    if res and res[0] not in self.doge_found:
+                                        self.doge_result_list.append((sm, res[0]))
+                                        self.doge_found.add(res[0])
+
+                                        self.found_sm.add(sm)
             except Exception as error:
                 print(f'外站检索出错: {error}, type: {type(error)}')
 
@@ -184,7 +189,7 @@ class SM2AV:
                 # 这里将delay增长到2s，减少被503的可能
                 await asyncio.sleep(randint(2, delay))
 
-        await self.__create_tasks(1, inner)
+        await self.__create_tasks(1, task)
 
     async def search(self, coro_num=1, delay=3):
         """启动搜索
