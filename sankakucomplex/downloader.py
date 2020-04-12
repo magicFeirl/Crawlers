@@ -40,6 +40,7 @@ class Downloader():
     end_page:              结束页 范围[起始页, 结束页]
 
     自定义项：
+    proxy:                 代理（仅支持http）
     max_size:              下载队列大小，默认为存储 120 个图片URL
     max_conn_num:          接口最大同时连接数，默认为 10 条
     max_download_num:      最大同时下载图片数，默认为 120 个
@@ -57,8 +58,9 @@ class Downloader():
     FILE_QUALITY = ['sample_url', 'file_url']
 
     def __init__(self, tags, dir_name, start_page, end_page,
-                 max_size=120, max_conn_num=10, max_download_num=120,
-                 timeout=3*60, download_videos=False, file_quality=0):
+                proxy=None,
+                max_size=120, max_conn_num=10, max_download_num=120,
+                timeout=3*60, download_videos=False, file_quality=0):
 
         pnum = end_page - start_page + 1
 
@@ -66,6 +68,8 @@ class Downloader():
         self.dir_name = dir_name
         self.start_page = start_page
         self.end_page = end_page+1
+        self.proxy = proxy
+
         self.max_conn_num = max_conn_num if pnum > \
             max_conn_num else pnum
 
@@ -113,7 +117,7 @@ class Downloader():
                 url = API.format(pidx, self.tags)
 
                 print(f'获取第 {pidx} 页数据...')
-                async with session.get(url) as resp:
+                async with session.get(url, proxy=self.proxy) as resp:
                     if resp.status is not 200:
                         raise Exception(f'Http状态码错误:{resp.status}')
 
@@ -163,7 +167,7 @@ class Downloader():
 
                 if not os.path.exists(file_name):
                     async with aiofiles.open(file_name, 'wb') as f:
-                        async with session.get(img_url) as resp:
+                        async with session.get(img_url, proxy=self.proxy) as resp:
                             while True:
                                 chunk = await resp.\
                                     content.read(64 * 1024)
