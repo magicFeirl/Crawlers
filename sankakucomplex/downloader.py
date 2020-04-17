@@ -78,6 +78,7 @@ class Downloader():
 
         self.timeout = timeout
         self.counter = 0
+        self.conn_counter = 0
         self.total_imgs = 0
 
         self.download_videos = download_videos
@@ -116,13 +117,15 @@ class Downloader():
             try:
                 url = API.format(pidx, self.tags)
 
-                print(f'获取第 {pidx} 页数据...')
+                # print(f'获取第 {pidx} 页数据...')
                 async with session.get(url, proxy=self.proxy) as resp:
                     if resp.status is not 200:
                         raise Exception(f'Http状态码错误:{resp.status}')
 
                     img_infos = await resp.json()
-                    print(f'成功获取第 {pidx} 页数据:')
+                    # print(f'\r成功获取第 {pidx} 页数据', end='')
+                    self.conn_counter += 1
+
                     if len(img_infos) == 0:
                         while True:
                             print(f'获取到空数据，取消第 {pidx} 页下载')
@@ -163,7 +166,7 @@ class Downloader():
                 file_name = img_url[lidx:ridx]
                 self.total_imgs += 1
 
-                print(f'Downloading: {file_name}')
+                # print(f'Downloading: {file_name}')
 
                 if not os.path.exists(file_name):
                     async with aiofiles.open(file_name, 'wb') as f:
@@ -176,6 +179,9 @@ class Downloader():
                                 await f.write(chunk)
 
                 self.counter += 1
+
+                print(f'\r已请求 {self.conn_counter} 页数据, '
+                f'已下载 {self.counter} 张图片', end='')
 
             except asyncio.TimeoutError:
                 print(f'Error:下载图片 {file_name} 超时')
@@ -200,16 +206,16 @@ class Downloader():
         timeout = aiohttp.ClientTimeout(self.timeout)
         async with aiohttp.ClientSession(headers=headers,timeout=timeout,connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
 
+            print('开始发起请求...')
             tasks.extend([asyncio.create_task(self.conn(session))
-                          for _ in range(self.max_conn_num)])
-
+                        for _ in range(self.max_conn_num)])
             tasks.extend([asyncio.create_task(self.download_img(session))
-                          for _ in range(self.max_download_num)])
+                        for _ in range(self.max_download_num)])
 
             start_time = time.time()
 
             await self.conn_queue.join()
-            print('所有连接已完毕')
+            print('\n所有连接已完毕')
             await self.url_queue.join()
 
             for task in tasks:
@@ -217,6 +223,7 @@ class Downloader():
 
             # 结束所有协程
             await asyncio.gather(*tasks, return_exceptions=True)
+
 
             print('*' * 60)
             print(f'Done {time.time() - start_time} s')
