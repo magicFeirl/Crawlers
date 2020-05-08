@@ -15,12 +15,12 @@ async def main():
     # 下载标签名
     tag_name = 'touhou'
     # 保存文件夹名
-    dir_name = 'th'
+    dir_name = 'tou'
 
     # 漫画下载：pool%3A漫画id
 
     d = Downloader(tag_name, dir_name
-    , 1, 3, proxy=proxy, timeout=5*60)
+    , 1, 7, proxy=proxy, timeout=5*60, max_conn_num=5)
 
     await d.start()
 

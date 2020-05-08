@@ -103,7 +103,7 @@ class Downloader():
         print(f'图片将保存至当前目录下的 {self.dir_name} 文件夹中；\n')
         print('提示：已经存在的重名图片不会重复下载。\n\n')
 
-        input('按回车键开始下载...')
+        # input('按回车键开始下载...')
 
     async def conn(self, session):
         '''取出队列数据并连接相应接口，如果获取到空数据会清空后面的队列数据'''
@@ -224,11 +224,11 @@ class Downloader():
             # 结束所有协程
             await asyncio.gather(*tasks, return_exceptions=True)
 
-
+            print()
             print('*' * 60)
             print(f'Done {time.time() - start_time} s')
             print(f'共有 {self.total_imgs} 图片')
             print(f'成功下载 {self.counter} 张图片')
             print(f'失败 {self.total_imgs - self.counter} 张\n')
 
-        input('按回车键退出...')
+        # input('按回车键退出...')
