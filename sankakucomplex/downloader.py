@@ -3,7 +3,7 @@ chan.sankakucomplex Images Downloader
 
 API: https://capi-v2.sankakucomplex.com/posts?page={}&limit=20&tags={}
 
-require:
+requirements:
 
 Python 3.7+
 aiohttp
@@ -24,6 +24,7 @@ def make_dirs(dir_name):
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
 
+    # 将当前工作路径设为刚刚的新建文件夹路径
     os.chdir(dir_name)
 
     print(f'文件保存至：{os.getcwd()} 下')
@@ -108,15 +109,14 @@ class Downloader():
     async def conn(self, session):
         '''取出队列数据并连接相应接口，如果获取到空数据会清空后面的队列数据'''
 
-        API = 'https://capi-v2.sankakucomplex.com/posts' + \
-            '?page={}&limit=20&tags={}'
+        API = 'https://capi-v2.sankakucomplex.com/posts?page={}&limit=20&tags={}'
 
         while True:
+            print('conning')
             pidx = await self.conn_queue.get()
 
             try:
                 url = API.format(pidx, self.tags)
-
                 # print(f'获取第 {pidx} 页数据...')
                 async with session.get(url, proxy=self.proxy) as resp:
                     if resp.status is not 200:
@@ -195,8 +195,8 @@ class Downloader():
 
         tasks = []
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" +
-            " AppleWebKit/537.36 (KHTML, like Gecko)" +
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            " AppleWebKit/537.36 (KHTML, like Gecko)"
             " Chrome/79.0.3945.130 Safari/537.36"
         }
 
@@ -230,5 +230,8 @@ class Downloader():
             print(f'共有 {self.total_imgs} 图片')
             print(f'成功下载 {self.counter} 张图片')
             print(f'失败 {self.total_imgs - self.counter} 张\n')
+
+            # 返回上层目录
+            os.chdir('..')
 
         # input('按回车键退出...')
