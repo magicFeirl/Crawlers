@@ -1,22 +1,21 @@
-'''UI_SankakuDownloader'''
+'''GUI SankakuDownloader'''
 
 import asyncio
-import multiprocessing
 
 import wx
+import wxasync
+import aiohttp
 
 from downloader import Downloader
 
-
-async def download_img(tag, dir_name, proxy, begin, end, conn, dw):
-    downloader = Downloader(tag, dir_name, begin, end,
-            timeout=5*60, max_conn_num=conn, max_download_num=dw)
-
-    await downloader.start()
-
-
-def go(tag, dir_name, proxy, begin, end, conn, dw):
-    asyncio.run(download_img(tag, dir_name, proxy, begin, end, conn, dw))
+'''
+异步 http 请求测试
+async def req_test(event):
+    async with aiohttp.ClientSession() as session:
+        proxy = 'http://127.0.0.1:1081'
+        async with session.get('https://www.google.com', proxy=proxy) as resp:
+            print(await resp.text())
+'''
 
 
 class Frame(wx.Frame):
@@ -27,22 +26,6 @@ class Frame(wx.Frame):
         style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER ^ wx.MAXIMIZE_BOX)
 
         self.InitUI()
-
-    def run(self, event):
-        tag = self.tag_name.GetValue()
-        dir_name = self.dir_name.GetValue()
-        proxy = self.proxy.GetValue()
-        begin = int(self.begin.GetValue())
-        end = int(self.end.GetValue())
-        conn = int(self.conn.GetValue())
-        dw = int(self.download.GetValue())
-
-        if not all([tag, dir_name, begin, end, conn, dw]):
-            print('参数有误或未填写完整')
-        else:
-            proc = multiprocessing.Process(target=go,
-            args=(tag, dir_name, proxy, begin, end, conn, dw, ))
-            proc.start()
 
     def InitUI(self):
         panel = wx.Panel(self)
@@ -85,19 +68,45 @@ class Frame(wx.Frame):
 
         self.download_button = wx.Button(panel, label='下载')
 
-        self.download_button.Bind(wx.EVT_BUTTON, self.run)
+        wxasync.AsyncBind(wx.EVT_BUTTON, self.async_run, self.download_button)
 
         wrapper.Add(self.download_button, flag=wx.EXPAND|wx.ALL^wx.BOTTOM, border=30)
         panel.SetSizer(wrapper)
 
+    async def async_run(self, event):
+        tag = self.tag_name.GetValue()
+        dir_name = self.dir_name.GetValue()
+        port = self.proxy.GetValue()
+        begin = int(self.begin.GetValue())
+        end = int(self.end.GetValue())
+        conn = int(self.conn.GetValue())
+        dw = int(self.download.GetValue())
+
+        if not all([tag, dir_name, begin, end, conn, dw]):
+            print('参数有误或未填写完整')
+        else:
+            self.download_button.Disable()
+            proxy = None
+
+            if port:
+                proxy = f'http://127.0.0.1:{port}'
+
+            downloader = Downloader(tag, dir_name, begin, end,
+            proxy=proxy, max_conn_num=conn, max_download_num=dw)
+
+            await downloader.start()
+
+            self.download_button.Enable()
+
 
 if __name__ == '__main__':
-    multiprocessing.freeze_support()
+    loop = asyncio.get_event_loop()
 
-    app = wx.App()
+    app = wxasync.WxAsyncApp()
     frame_obj = Frame()
     frame_obj.Show()
-    app.MainLoop()
+
+    loop.run_until_complete(app.MainLoop())
 
 
 
