@@ -22,6 +22,10 @@ from crawler_utils import ClientConfig
 
 # 几十行代码摸了一上午...
 
+
+XPATH = '//img[@class="thumbnail-preview "]/@src'
+
+
 class GelBooruDownloader(Downloader):
     RATING_DICT = dict(a='', s='+rating:safe', q='+rating:questionalbe', e='+rating:explicit')
 
@@ -39,6 +43,7 @@ class GelBooruDownloader(Downloader):
 
         self.init_output(destfile)
         self.init_connect_queue(self.init_urls(begin, end, rating))
+        # print(self.connect_queue)
 
     def init_output(self, destfile):
         if not destfile:
@@ -65,8 +70,8 @@ class GelBooruDownloader(Downloader):
     async def connect_callback(self, response):
         status = response.status
         if status == 200:
-            xp = '//span[@class="thumb"]/a/img/@src'
-            thumb_imgs = self.parse_html(await response.text(), xp)
+            thumb_imgs = self.parse_html(await response.text(), XPATH)
+            print(thumb_imgs)
             if thumb_imgs:
                 for img in thumb_imgs:
                     await self.download_queue.put(img)
@@ -76,6 +81,7 @@ class GelBooruDownloader(Downloader):
             print(f'请求网页 HTTP 状态码错误:{status}')
 
     async def download_callback(self, url):
+        # print(url)
         print(url.replace('thumbnail', 'sample'), file=self.output)
 
     def clear(self):
@@ -89,7 +95,7 @@ class GelBooruDownloader(Downloader):
 
 
 async def main():
-    gbd = GelBooruDownloader('cookie_(touhou)', destfile='cookie_a', rating='a', max_connect_num=10, end=50)
+    gbd = GelBooruDownloader('touhou', destfile='t', rating='a', max_connect_num=1)
     await gbd.start()
     gbd.clear()
 
