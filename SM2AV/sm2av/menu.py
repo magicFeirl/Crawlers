@@ -8,24 +8,23 @@ def get_input():
 
     while True:
         try:
+            print('输入导入SM号的方式：')
+            print('1. 从B站视频简介导入（av or bv 号）')
+            print('2. 从N站用户投稿导入（输入N站用户ID）')
+            print('3. 从本地文件导入（输入文件名）')
+            print('4. 从字符串导入（每个关键字之间用,隔开)')
+            print('5. 退出程序')
 
-                print('输入导入SM号的方式：')
-                print('1. 从B站视频简介导入（av or bv 号）')
-                print('2. 从N站用户投稿导入（输入N站用户ID）')
-                print('3. 从本地文件导入（输入文件名）')
-                print('4. 从字符串导入（每个关键字之间用,隔开)')
-                print('5. 退出程序')
+            inp = int(input('请根据序号输入: '))
 
-                inp = int(input('请根据序号输入: '))
-
-                if inp == 5:
-                    input('输入回车退出...')
-                    exit()
-                elif inp < 1 or inp > 5:
-                    print('无效的输入。')
-                else:
-                    print()
-                    return inp
+            if inp == 5:
+                input('输入回车退出...')
+                exit()
+            elif inp < 1 or inp > 5:
+                print('无效的输入。')
+            else:
+                print()
+                return inp
         except Exception as error:
             print(f'输入异常: {error}')
 

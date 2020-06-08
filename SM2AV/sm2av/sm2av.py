@@ -5,6 +5,7 @@ import re
 import asyncio
 from time import time
 from random import randint
+import traceback
 
 from lxml import etree
 
@@ -12,6 +13,11 @@ from lxml import etree
 class SM2AV:
 
     def __init__(self, sm_list, session, output_file=None):
+        '''SM 号检索类
+        sm_list： sm号列表
+        session： 一个 aiohttp.ClientSession 实例
+        output_file: 可选的输出文件对象'''
+
         self.session = session
         self.url_queue = asyncio.Queue()
 
@@ -27,7 +33,8 @@ class SM2AV:
         # 所有sm号
         self.all = set(sm_list)
         # 去重后的sm号列表，其中元素作为检索参数
-        self.sm_list = list(self.all)
+        # 2020年6月8日 更改，集合去重后的数据无序，因此这里还是改成列表了
+        self.sm_list = list(enumerate(sm_list))
 
         # 从Doge找到的sm号集合
         self.doge_found = set()
@@ -40,11 +47,12 @@ class SM2AV:
 
         while True:
             try:
-                url = await self.url_queue.get()
-                await callback(url, *args, **kwargs)
+                sm_info = await self.url_queue.get()
+                await callback(sm_info, *args, **kwargs)
             except asyncio.CancelledError:
                 raise
             except Exception as error:
+                traceback.print_exc()
                 print(f'请求数据异常: {error} type: {type(error)}')
             finally:
                 self.url_queue.task_done()
@@ -89,9 +97,11 @@ class SM2AV:
         print('正在进行站内检索...')
         self.__put_in_queue(self.sm_list)
 
-        async def task(smn):
+        async def task(sm_info):
+            rank, sm = sm_info
+
             api = 'https://api.bilibili.com/x/web-interface/search/type' + \
-                  f'?keyword={smn}&search_type=video'
+                  f'?keyword={sm}&search_type=video'
 
             await asyncio.sleep(.5)
             async with self.session.get(api) as resp:
@@ -105,7 +115,7 @@ class SM2AV:
                     li = []
 
                     if data:
-                        self.found_sm.add(smn)
+                        self.found_sm.add(sm)
 
                     for r in data:
                         if r['aid'] not in self.found_av:
@@ -113,7 +123,7 @@ class SM2AV:
 
                             aid = 'av' + str(r['aid'])
                             title = r['title']
-                            li.append((smn, aid, title))
+                            li.append([rank, sm, aid, title])
 
                     if li:
                         self.result_list.append(li)
@@ -122,12 +132,13 @@ class SM2AV:
 
         if len(self.result_list):
             print('站内检索结果:')
-            for info in self.result_list:
+            for info in sorted(self.result_list):
                 for item in info:
-                    print(item[0], item[1], item[2])
+                    res = ' '.join(list(map(str, item)))
+                    print(res)
                     # 输出到本地
                     if self.output_file:
-                        print(item[0], item[1], item[2], file=self.output_file)
+                        print(res, file=self.output_file)
         else:
             print('站内检索无结果。')
 
@@ -155,6 +166,7 @@ class SM2AV:
                     selector = etree.HTML(html)
                     # 获取所有包含搜索结果的a标签
                     tag_a = selector.xpath('//a[@class="result__url js-result-extras-url"]')
+                    # titles = selector.xpath('//a[@class=result__a]')
 
                     if not tag_a:
                         # print(f'DogeDoge 检索: {sm} 无返回列表，可能是因为访问过于频繁或检索无结果。')
@@ -165,6 +177,7 @@ class SM2AV:
                     # 遍历结果标签
                     for a in tag_a:
                         # 先解析结果简介信息，排除非B站的链接，避免无用请求
+                        # print(a, title)
                         res_domain = a.xpath('string(./span[@class="result__url__domain"])')
 
                         if res_domain and res_domain.find(r'video/av') != -1:
@@ -174,7 +187,7 @@ class SM2AV:
                                 res = re_resp.headers.get('location')
 
                                 # 排除带参数的URL
-                                if res.find('?') == -1:
+                                if res and res.find('?') == -1:
                                     res = re.search(search_reg, res)
                                     # res[0] av号
                                     if res and res[0] not in self.doge_found:
@@ -226,7 +239,9 @@ class SM2AV:
         if len(not_found):
             print(f'以下为未找到sm号：')
             if self.output_file:
-                print(f'{len(not_found)} 个数据未找到。以下为未找到sm号：', file=self.output_file)
+                print('\n'*2, file=self.output_file)
+                print(f'{len(not_found)} 个数据未找到。以下为未找到sm号：',
+                file=self.output_file)
 
             for item in not_found:
                 print(item, end=' ')
