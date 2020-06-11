@@ -39,4 +39,3 @@ print(task.result()) # 打印协程返回值
 loop.close() # 关闭事件循环
 
 ```
-

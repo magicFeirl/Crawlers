@@ -14,9 +14,9 @@ async def parse_json(text):
     return [pic['img_src'] for item in items if 'pictures' in item for pic in item['pictures']]
 
 
-async def prt_url(url, session):
+async def prt_url(url, session, *args):
     print(url)
-
+    print(args)
 
 def format_url(uid, begin, end):
     host = 'https://api.vc.bilibili.com/link_draw/v1/doc/doc_list'

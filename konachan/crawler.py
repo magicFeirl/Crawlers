@@ -92,5 +92,5 @@ def get_img(tag,start=1,end=2,delay=1,file_name=''):
             sleep(delay)
 
 
-get_img('ke-ta',1,100)
+get_img('thkani',1,100)
 

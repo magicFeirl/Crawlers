@@ -114,12 +114,12 @@ class SM2AV:
                     data = result['data']['result']
                     li = []
 
-                    if data:
-                        self.found_sm.add(sm)
-
+                    # 之前只是简单地判断是否有返回搜索结果，导致搜索不同sm号会多次返回同一视频结果
+                    # 最后会使外站检索出问题，因为found_sm中有部分实际没有找到的sm号
                     for r in data:
                         if r['aid'] not in self.found_av:
                             self.found_av.add(r['aid'])
+                            self.found_sm.add(sm)
 
                             aid = 'av' + str(r['aid'])
                             title = r['title']
@@ -151,6 +151,8 @@ class SM2AV:
         search_reg = re.compile(r'av\d+')
         sm_list = list(self.all-self.found_sm)
         self.__put_in_queue(sm_list)
+
+        # print('Doge =>', sm_list)
 
         print('正在使用DogeDoge进行检索...')
 

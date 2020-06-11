@@ -1,7 +1,7 @@
 '''
 requirement:
 python 3.7+
-aiphttp
+aiohttp
 
 [aiofiles]
 '''
@@ -50,7 +50,7 @@ class AsyncCrawler():
 
             try:
                 async with self.session.get(url) as resp:
-                    result, clear = await self.req(await resp.text(), \
+                    result, clear = await self.req(await resp.text(),
                     *self.req_args, **self.req_kwargs)
 
                     if clear and self.clear_when_empty:

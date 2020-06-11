@@ -1,5 +1,6 @@
-'''require:
+'''requirements:
 python3.7+
+
 aiohttp
 aiofiles
 lxml
@@ -71,6 +72,7 @@ async def get_imgs_url(session,cv):
 
 async def download(session, url):
     '''将图片保存至本地'''
+
     global counter
 
     file_name = url[url.rfind('/')+1:]

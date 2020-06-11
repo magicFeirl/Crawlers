@@ -58,6 +58,7 @@ class Downloader(object):
             async with session.post(login_url, data=field) as resp:
                 resp.raise_for_status()
                 cookies = resp.cookies
+                print(cookies)
 
         with open(Downloader.COOKIE_FILE, 'wb') as f:
             pickle.dump(cookies, f)
@@ -74,6 +75,8 @@ class Downloader(object):
         try:
             with open(Downloader.COOKIE_FILE, 'rb') as f:
                 cookies = pickle.load(f)
+
+            print('尝试使用 COOKIES 登录...')
         except IOError:
             print('未找到 COOKIE 文件，尝试登录...')
             cookies = await self.__login(session)
@@ -130,7 +133,7 @@ class Downloader(object):
             finally:
                 self.url_queue.task_done()
 
-    async def download(self, tag, start=1, end=1, timeout=60):
+    async def download(self, tag, login=False, start=1, end=1, timeout=60):
         """下载指定 TAG 的内容
 
         可设置下载起始页以及下载结束页，目前没有对是否存在下载内容进行检查
@@ -145,6 +148,9 @@ class Downloader(object):
         start = time.time()
 
         async with aiohttp.ClientSession(timeout=timeout) as session:
+            if login:
+                await self.__login(session)
+
             await self.__create_tasks(session, url_list)
 
         print('\n'*2)

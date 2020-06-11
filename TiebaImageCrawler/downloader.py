@@ -4,6 +4,7 @@ import aiohttp
 
 from parse import Parser
 
+
 class Downloader():
 
     def __init__(self):
@@ -50,8 +51,7 @@ class Downloader():
             self.uri_queue.put_nowait(url)
 
         async with aiohttp.ClientSession() as session:
-            tasks = await self.create_tasks(session, callback,
-            corou_num, args)
+            tasks = await self.create_tasks(session, callback, corou_num, args)
 
             await self.uri_queue.join()
 
@@ -60,5 +60,3 @@ class Downloader():
 
             await asyncio.gather(*tasks, return_exceptions=True)
 
-if __name__ == '__main__':
-    pass

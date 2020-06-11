@@ -30,6 +30,14 @@ class Frame(wx.Frame):
     def InitUI(self):
         panel = wx.Panel(self)
 
+        menubar = wx.MenuBar() # 新建一个Menubar对象
+        about = wx.Menu() # 新建一个menu选项卡
+
+        about.Append(-1, '&关于') # 添加子选项
+        self.SetBackgroundColour('white')
+        menubar.Append(about, '&选项') # 将选项卡添加至menubar
+
+
         tag_name_lable = wx.StaticText(panel, label='标签名: ')
         dir_name_lable = wx.StaticText(panel, label='保存文件夹名: ')
         proxy_lable = wx.StaticText(panel, label='本地代理端口（可选): ')
@@ -72,6 +80,8 @@ class Frame(wx.Frame):
 
         wrapper.Add(self.download_button, flag=wx.EXPAND|wx.ALL^wx.BOTTOM, border=30)
         panel.SetSizer(wrapper)
+
+        self.SetMenuBar(menubar)
 
     async def async_run(self, event):
         tag = self.tag_name.GetValue()
