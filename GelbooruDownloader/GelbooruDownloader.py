@@ -22,12 +22,14 @@ from crawler_utils import ClientConfig
 
 # 几十行代码摸了一上午...
 
-
-XPATH = '//img[@class="thumbnail-preview "]/@src'
+# 发现页面有类的图片标签就是图片元素
+# 以前的 xpath 写的太复杂了...
+XPATH = '//img[@class]/@src'
 
 
 class GelBooruDownloader(Downloader):
-    RATING_DICT = dict(a='', s='+rating:safe', q='+rating:questionalbe', e='+rating:explicit')
+    RATING_DICT = dict(a='', s='+rating:safe',
+    q='+rating:questionalbe', e='+rating:explicit')
 
     HEADERS = {
         'User-Agent': 'wasp', 'Cookie': 'fringeBenefits=yup',
@@ -71,9 +73,10 @@ class GelBooruDownloader(Downloader):
         status = response.status
         if status == 200:
             thumb_imgs = self.parse_html(await response.text(), XPATH)
-            print(thumb_imgs)
+            # print(thumb_imgs)
             if thumb_imgs:
                 for img in thumb_imgs:
+
                     await self.download_queue.put(img)
             else:
                 await self.clear_connect_queue()
