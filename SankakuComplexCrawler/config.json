@@ -1,0 +1,1 @@
+{"proxy": null, "timeout": "180", "headers": {"User-Agent": "wasp"}, "port": "", "max_connect_num": 5, "max_download_num": 100}
