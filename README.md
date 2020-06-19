@@ -1,18 +1,25 @@
-### Python爬虫
+# Python 爬虫
 
-**介绍：**
+> 写了差不多两年爬虫，技术水平还停留在分析接口、COOKIE模拟登陆、解析静态网页上，因为需求只是爬爬图片罢了w。
+
+一些自写爬虫，大部分是图片爬虫。
+
+## 介绍
 
 * AsyncCrawler 然并卵的生产者/消费者模型异步爬虫
 * BiliArticleCrawler B站专栏图片爬虫
-* wallhaven 色图爬虫
-* konachan 色图爬虫，已废弃
-* sankakucomplex 色图爬虫
+* wallhaven 图片爬虫
+* sankakucomplex 图片爬虫
+* GelbooruDownloader 图片爬虫
+* **SankakuComplexCrawler 带GUI的图片爬虫**
+* SM2AV B站视频检索工具
+* ~~konachan 图片爬虫，已废弃~~
 
-### 笔记
+## 笔记
 
 > 写爬虫还是得了解点 HTTP 的知识。
 
-#### 0. 异步爬虫的基本思路
+### 0. 异步爬虫的基本思路
 
 > 话说这里貌似是分 4 个步骤的，不知道误漏了哪条。
 
@@ -34,7 +41,7 @@
 
 入库 or 写入本地，需要用到 aio。
 
-#### 1. 如何仅获取响应头而不需要响应实体
+### 1. 如何仅获取响应头而不需要响应实体
 
 HTTP 的 head 方法可以做到这一点，通过该方法请求的数据不会包含响应实体。仅获取请求头对请求媒体文件或许有帮助。
 
@@ -44,11 +51,11 @@ r = requests.head('https://example.com')
 print(r.headers)
 ```
 
-#### 2. 仅请求部分实体内容
+### 2. 仅请求部分实体内容
 
 可以通过请求头的 Content-Range 设置请求实体范围（前提是服务端支持）。
 
-#### 3. HTTP 状态码
+### 3. HTTP 状态码
 
 > 全凭记忆记录，详细版可见《图解HTTP》P60。
 
