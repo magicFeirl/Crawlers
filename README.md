@@ -13,6 +13,7 @@
 * GelbooruDownloader 图片爬虫
 * **SankakuComplexCrawler 带GUI的图片爬虫**
 * SM2AV B站视频检索工具
+* BiliAutoFav B站视频批量收藏工具
 * ~~konachan 图片爬虫，已废弃~~
 
 ## 笔记
