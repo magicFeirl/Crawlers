@@ -2,7 +2,6 @@
     自动收藏脚本，很垃圾，但是够用
 '''
 
-
 import asyncio
 import re
 
@@ -13,6 +12,7 @@ import aiohttp
 class AddFav():
 
     def __init__(self, fid, cookies):
+        '''传入收藏夹id和cookie'''
         self.fid = fid
         self.cookies = cookies
 
@@ -64,6 +64,7 @@ class AddFav():
                 self.rid_queue.task_done()
 
     async def run(self, rids, coro_num):
+        '''传入av号和并发收藏数进行自动收藏'''
         tasks = []
 
         self.rid_queue = self.init_queue(rids)
