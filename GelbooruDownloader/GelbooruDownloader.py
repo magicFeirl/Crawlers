@@ -27,6 +27,7 @@ class GelBooruDownloader(Downloader):
 
         self.tags = tags
         self.limit = limit
+        self.page_counter = 1
 
         self.init_output(destfile)
 
@@ -57,7 +58,10 @@ class GelBooruDownloader(Downloader):
     async def connect_callback(self, response):
         status = response.status
         if status == 200:
-            print(f'{response.url}')
+            # print(f'{response.url}')
+
+            print(f'\r {self.page_counter} 页数据已请求', end='')
+            self.page_counter += 1
 
             xpath = '//post/@sample_url' # 只下载 sample 质量的文件
             # 这里如果直接传 text lxml 会报 ValueError，貌似是因为 Unicode 的原因
@@ -73,6 +77,7 @@ class GelBooruDownloader(Downloader):
 
     async def download_callback(self, url):
         print(url, file=self.output)
+        self.output.flush() # 清空输出缓冲区
 
     def parse_html(self, text, xpath):
         selector = html.fromstring(text)
@@ -85,7 +90,7 @@ class GelBooruDownloader(Downloader):
 
 
 async def main():
-    gbd = GelBooruDownloader('ke-ta+uncensored', destfile='keta_e_s',
+    gbd = GelBooruDownloader('tag_here', destfile=' ',
     rating='e', max_connect_num=5, end=5)
 
     await gbd.start()
@@ -96,6 +101,4 @@ if __name__ == '__main__':
     start = time.time()
     asyncio.run(main())
 
-    print(f'Done {time.time()-start} s.')
-    # gbd = GelBooruDownloader('ke-ta uncensored', end=10)
-    # print(gbd.init_urls(1, 1, 'e'))
+    print(f'\nDone {time.time()-start} s.')
