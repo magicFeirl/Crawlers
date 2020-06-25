@@ -108,7 +108,7 @@ async def run():
 
             if filename:
                 try:
-                    file_obj = open(filename, 'a')
+                    file_obj = open(filename, 'a', encoding='utf-8')
                 except IOError as error:
                     print(f'打开文件失败: {error}')
 
