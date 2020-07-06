@@ -38,6 +38,8 @@ class Downloader(object):
 
         TODO：登录是否成功检查"""
 
+        print('使用账号进行登录')
+
         login_page = 'https://wallhaven.cc/login'
         login_url = 'https://wallhaven.cc/auth/login'
 
@@ -55,15 +57,20 @@ class Downloader(object):
 
             cookies = {}
 
-            async with session.post(login_url, data=field) as resp:
+            async with session.post(login_url, data=field, allow_redirects=False) as resp:
                 resp.raise_for_status()
                 cookies = resp.cookies
                 print(cookies)
 
-        with open(Downloader.COOKIE_FILE, 'wb') as f:
-            pickle.dump(cookies, f)
+        remember = None
+        for k in cookies.keys():
+            if k.startswith('remember'):
+                remember = dict(k=cookies[k])
 
-        return cookies
+        with open(Downloader.COOKIE_FILE, 'wb') as f:
+            pickle.dump(remember, f)
+
+        return remember
 
     async def __get_cookies(self, session):
         """获取 COOKIES 并返回
