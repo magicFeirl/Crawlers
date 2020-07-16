@@ -14,8 +14,9 @@ from GelbooruDownloader import GelBooruDownloader
 
 
 class MainFrame(wx.Frame):
-    def __init__(self, parent=None, title='WX', size=(600, -1)):
-        super(MainFrame, self).__init__(parent, title=title, size=size)
+    def __init__(self, parent=None, title='WX', size=(600, 200)):
+        super(MainFrame, self).__init__(parent, title=title,
+        size=size, style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER ^ wx.MAXIMIZE_BOX)
         self.InitUI()
 
     def InitUI(self):
@@ -40,10 +41,10 @@ class MainFrame(wx.Frame):
             ctrl.SetFont(ctrl_font)
 
         inner.AddMany([(tag_ctrl, 1, wx.EXPAND),
-        (begin_ctrl, 1, wx.EXPAND),
-        (end_ctrl, 1, wx.EXPAND),
-        (output_filename, 1, wx.EXPAND),
-        (start_btn, 1, wx.EXPAND)])
+        (begin_ctrl, 0, wx.EXPAND),
+        (end_ctrl, 0, wx.EXPAND),
+        (output_filename, 0, wx.EXPAND),
+        (start_btn, 0, wx.EXPAND)])
 
         inner.AddGrowableCol(0, 1)
 
@@ -51,7 +52,7 @@ class MainFrame(wx.Frame):
 
         text = '''欢迎使用GelbooruDownloader，这是一个简单的爬虫程序，用于爬取 Gelbooru 上的图片链接并保存至本地。你可以通过IDM等下载工具批量下载图片链接。
 
-四个输入框分别对应：标签名、起始页、结束页、输出文件名，爬取的链接文件会以指定的输出文件名保存\n至当前目录，如果没有填写输出文件名则默认使用标签名作为输出文件名。
+四个输入框分别对应：标签名、[起始页, 结束页)、输出文件名，爬取的链接文件会以指定的输出文件名保存\n至当前目录，如果没有填写输出文件名则默认使用标签名作为输出文件名。
         '''
 
         tips = wx.StaticText(panel, label=text)
