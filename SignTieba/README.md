@@ -13,13 +13,17 @@
 }
 ```
 
-请求接口：https://tieba.baidu.com/sign/add
+签到请求接口：https://tieba.baidu.com/sign/add
 
 发送 post 请求之后会返回一条 json 表示状态。
 
 那么现在的思路就很简单了，首先我们需要获取要签到的贴吧列表，然后遍历这个列表发送 post 请求进行签到即可。
 
 ## 获取贴吧列表
+
+找到了一个获取贴吧列表的[接口](https://tieba.baidu.com/mo/q/newmoindex)，使用该接口可以很轻松的获取到吧信息，只须一个 BDUSS cookie。
+
+## 获取贴吧列表（旧版）
 
 这里发请求很容易，但是获取贴吧列表有些坑：
 
@@ -108,63 +112,80 @@ def get_tb_list(BDUSS, STOKEN, username, refresh=False):
 
 ## 遍历贴吧列表签到
 
+> 2020年7月18日 更新接口版源码
+
 有了贴吧列表之后签到就只剩发送请求了，这部分很简单，因此直接上代码：
 
 ```python
-'''
-    本地版贴吧自动签到
-
-    贴吧签到只需要一个 BDUSS
-    获取贴吧列表需要 BDUSS 和 tieba.baidu 下的 STOKEN
-
-    由于 STOKEN 有一个月的过期时间且 SCF 对 lxml 支持不好，因此考虑 SCF 端只保留贴吧列表文件和 BDUSS，而更新贴吧列表则由本地程序实现
-'''
-
-import time
+import os
 import json
+import time
 from random import randint
 
 import requests
 
-# 填入你的 BDUSS
-BDUSS = 'here'
-
-# 从本地获取贴吧列表
-def get_tb_list_from_file(username):
-    with open(username, 'r') as file:
-        tb_list = json.load(file)
-
-    return tb_list
 
 class SignTieba(object):
-    def __init__(self):
-        pass
+    def __init__(self, BDUSS):
+        self.BDUSS = BDUSS
 
-    def sign(self, tb_list, BDUSS):
-        '''遍历贴吧列表并签到'''
-        
-        api = 'https://tieba.baidu.com/sign/add'
-	
-    	# 构造请求头
-        headers = {
+        self.headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.58',
             'cookie': 'BDUSS={};'.format(BDUSS)
         }
-		
-        # 发送请求
+
+    def sign(self, filename=None, refresh=False):
+        api = 'https://tieba.baidu.com/sign/add'
+        tb_list = self.get_ba_list(filename, refresh)
+
         for tb in tb_list:
-            r = requests.post(api, data=dict(ie='utf-8', kw=tb), headers=headers)
+            r = requests.post(api, data=dict(ie='utf-8', kw=tb), headers=self.headers)
             print(tb, r.json())
 
-            # 暂停一会，如果请求过于频繁有些吧会签到失败
             time.sleep(randint(2, 3))
+
+    def get_ba_list(self, filename=None, refresh=False):
+        ba_list = []
+
+        if not filename or refresh or not os.path.exists(filename):
+            ba_list = self.get_ba_list_by_api()
+        else:
+            ba_list = self.get_ba_list_from_file(filename)
+
+        return ba_list
+
+    def get_ba_list_from_file(self, filename):
+        with open(filename, 'r') as file:
+            ba_list = json.load(file)
+
+        return ba_list
+
+    def get_ba_list_by_api(self):
+        api = 'https://tieba.baidu.com/mo/q/newmoindex'
+        rjson = requests.get(api, headers=self.headers).json()
+
+        if rjson['error'] != 'success':
+            print('请求接口出错')
+            return []
+
+        ba_list = []
+
+        for ba in rjson['data']['like_forum']:
+            ba_list.append(ba['forum_name'])
+
+        return ba_list
+
+    def save_ba_list(self, ba_list, filename):
+        with open(filename, 'w') as file:
+            json.dump(ba_list, file)
+
+        return ba_list
 
 
 if __name__ == '__main__':
-    ST = SignTieba()
-    tb_list = get_tb_list_from_file('你的吧列表本地文件')
+    BDUSS = 'here' # 填入你的BDUSS
+    SignTieba(BDUSS).sign()
 
-    ST.sign(tb_list, BDUSS)
 ```
 
 自此本地版贴吧签到就完成了。
@@ -175,6 +196,6 @@ if __name__ == '__main__':
 
 ## 源码
 
-[Github]()
+[Github](https://github.com/magicFeirl/Crawlers/tree/master/SignTieba)
 
 <span style="color:#fffff0;">看完了还是一头雾水？这不是你的问题，是作者太懒了。</span>
