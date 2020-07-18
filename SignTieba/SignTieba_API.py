@@ -16,6 +16,7 @@ class SignTieba(object):
         }
 
     def sign(self, filename=None, refresh=False):
+        '''可传入吧列表文件和一个刷新吧列表标志，如果不传则每次都重新获取吧列表'''
         api = 'https://tieba.baidu.com/sign/add'
         tb_list = self.get_ba_list(filename, refresh)
 
@@ -26,6 +27,7 @@ class SignTieba(object):
             time.sleep(randint(2, 3))
 
     def get_ba_list(self, filename=None, refresh=False):
+        '''获取吧列表（本地文件 or 请求接口）'''
         ba_list = []
 
         if not filename or refresh or not os.path.exists(filename):
@@ -36,12 +38,14 @@ class SignTieba(object):
         return ba_list
 
     def get_ba_list_from_file(self, filename):
+        '''从本地文件获取吧列表'''
         with open(filename, 'r') as file:
             ba_list = json.load(file)
 
         return ba_list
 
     def get_ba_list_by_api(self):
+        '''请求接口获取吧列表'''
         api = 'https://tieba.baidu.com/mo/q/newmoindex'
         rjson = requests.get(api, headers=self.headers).json()
 
@@ -57,6 +61,7 @@ class SignTieba(object):
         return ba_list
 
     def save_ba_list(self, ba_list, filename):
+        '''传入吧列表和保存文件名保存吧列表'''
         with open(filename, 'w') as file:
             json.dump(ba_list, file)
 
