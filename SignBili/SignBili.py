@@ -7,10 +7,9 @@
 import requests
 
 
-# CTRN43062 的 cookie
 # 填入你的 SESSDATA 和 bili_jct
-SESSDATA = '4a39e976%2C1610683388%2Cae5b1*71'
-bili_jct = '8dccc4234e1ccb01465e30da694eb181'
+SESSDATA = ''
+bili_jct = ''
 
 
 class SignBili(object):
