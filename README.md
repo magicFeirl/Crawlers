@@ -4,68 +4,30 @@
 
 一些自写爬虫，大部分是图片爬虫。
 
-## 介绍
+## BiliArticleCrawler
 
-* AsyncCrawler 然并卵的生产者/消费者模型异步爬虫
-* BiliArticleCrawler B站专栏图片爬虫
-* wallhaven 图片爬虫
-* sankakucomplex 图片爬虫
-* GelbooruDownloader 图片爬虫
-* **SankakuComplexCrawler 带GUI的图片爬虫**
-* SM2AV B站视频检索工具
-* BiliAutoFav B站视频批量收藏工具
-* ~~konachan 图片爬虫，已废弃~~
+一个简单的异步爬虫，用来爬取B站专栏图片链接并保存至本地文本文件，支持批量爬取。
 
-## 笔记
+## GelbooruDownloader
 
-> 写爬虫还是得了解点 HTTP 的知识。
+Gelbooru 图片爬虫，爬取指定 tag 和范围的图片链接并保存至本地文本文件。
 
-### 0. 异步爬虫的基本思路
+![](./ExampleImages/GelbooruCrawler-example.jpg)
 
-> 话说这里貌似是分 4 个步骤的，不知道误漏了哪条。
+## SankakuComplexCrawler
 
-大体上还是遵循几个基本流程（数据获取、数据清洗、数据存储...），先前写的 aio 爬虫按照生产者/消费者模型也都能用，不过通用性不强，这里记录一点思路：
+SankakuComplex 图片爬虫，自带 GUI，支持并发限制等设置。
 
-**数据获取**
+![](./ExampleImages/SankakuComplexCrawler-example.jpg)
 
-这里没什么好说的，能用接口就用接口，没有接口但是服务端返回的数据和客户端显示的基本一致的话求请求网页然后进行数据清洗，实在不行就上浏览器模拟轮子。
+## SM2AV
 
-值得一提的是发起请求这部分是属于 IO 密集型操作，要上 aio。
+B站 sm 号检索工具，支持外站检索，支持多种输入方式，结果可输出到本地文本文件。
 
-**数据清洗**
+![](./ExampleImages/SM2AV-example.jpg)
 
-大部分都是解析网页、JSON，前者可以用 Xpath，BeautifulSoup 等解析工具，后者用 Python 自带的库就能很好的完成。
+## SignTieba
 
-这部分没有 IO 操作，属于 CPU 密集型操作，用不上 aio。但是配合数据存储的话还是得用 aio 的。
+贴吧一键签到。
 
-**数据存储**
-
-入库 or 写入本地，需要用到 aio。
-
-### 1. 如何仅获取响应头而不需要响应实体
-
-HTTP 的 head 方法可以做到这一点，通过该方法请求的数据不会包含响应实体。仅获取请求头对请求媒体文件或许有帮助。
-
-```python
-# ...
-r = requests.head('https://example.com')
-print(r.headers)
-```
-
-### 2. 仅请求部分实体内容
-
-可以通过请求头的 Content-Range 设置请求实体范围（前提是服务端支持）。
-
-### 3. HTTP 状态码
-
-> 全凭记忆记录，详细版可见《图解HTTP》P60。
-
-1xx: 服务端正在处理请求
-
-2xx: 请求成功
-
-3xx: 重定向相关(304例外)
-
-4xx: 客户端错误代码 服务器无法处理请求
-
-5xx: 服务端错误代码 服务器处理请求出错
+## And more...
