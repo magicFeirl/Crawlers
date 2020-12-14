@@ -1,0 +1,13 @@
+批量获取N站用户视频链接.js
+
+**使用前请先把 www.nicovideo.jp 的 www 换为 sp 以切换到手机版网页**
+
+series
+document.querySelectorAll('a.video-item-area').forEach((x)=>{console.log(x.href)});
+
+video & mylist 
+document.querySelectorAll('a.siteWide-VideoItem_Area').forEach((x)=>{console.log(x.href)});
+
+**2020年12月6日18:18:54 更新**
+貌似 nico 的 pc 端 css 又改了，现在 series 使用如下代码获取 sm 号。其他的暂且没看
+document.querySelectorAll('.MediaObject.VideoMediaObject.SeriesVideoListContainer-video').forEach((x)=>{console.log(x.getAttribute('data-video-itemdata-video-id'));});
