@@ -135,6 +135,9 @@ class SM2AV:
             for info in sorted(self.result_list):
                 for item in info:
                     res = ' '.join(list(map(str, item)))
+                    # B 站网页端会自动把 av 号转为对应标题链接，但是手机端貌似不会，所以这个不保留 title
+                    # 的 res 先放着好了
+                    # no_title_res = ' '.join(list(map(str, item[:3])))
                     print(res)
                     # 输出到本地
                     if self.output_file:
